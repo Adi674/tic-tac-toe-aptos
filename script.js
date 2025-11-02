@@ -138,7 +138,7 @@ async function disconnectWallet() {
 function handleWalletConnected(account) {
     walletConnected = true;
     currentAccount = account;
-    gameRegistry = account.address; // Use account address as registry
+    gameRegistry = account.address;
     
     walletDisconnected.classList.add('hidden');
     walletConnectedDiv.classList.remove('hidden');
@@ -273,59 +273,6 @@ async function createGameVsComputer() {
     }
 }
 
-async function createGameVsPlayer() {
-    if (!currentAccount) {
-        showAlert('Please connect your wallet first', 'error');
-        return;
-    }
-
-    const opponent = opponentAddressInput.value.trim();
-    if (!opponent) {
-        showAlert('Please enter opponent address', 'error');
-        return;
-    }
-
-    if (!opponent.startsWith('0x') || opponent.length !== 66) {
-        showAlert('Invalid wallet address format', 'error');
-        return;
-    }
-
-    try {
-        createGameBtn.disabled = true;
-        createGameBtn.textContent = '⏳ Creating Game...';
-        
-        if (currentAccount.address.includes('demo')) {
-            createDemoGame('player', opponent);
-            return;
-        }
-        
-        const payload = {
-            type: "entry_function_payload",
-            function: `${MODULE_ADDRESS}::tic_tac_toe::create_game_vs_player`,
-            type_arguments: [],
-            arguments: [opponent]
-        };
-
-        const response = await window.aptos.signAndSubmitTransaction(payload);
-        showAlert('Game created successfully!', 'success');
-        
-        opponentAddressInput.value = '';
-        opponentInput.classList.add('hidden');
-        
-        setTimeout(() => {
-            loadGameStats();
-            loadActiveGame();
-        }, 3000);
-        
-    } catch (error) {
-        console.error('Create game error:', error);
-        showAlert('Failed to create game. Please try again.', 'error');
-    } finally {
-        createGameBtn.disabled = false;
-        createGameBtn.textContent = 'Create Game';
-    }
-}
-
 function createDemoGame(mode, opponent = null) {
     const gameId = Date.now();
     const currentTime = Math.floor(Date.now() / 1000);
@@ -346,41 +293,7 @@ function createDemoGame(mode, opponent = null) {
     showCurrentGame();
     updateGameDisplay();
     
-    if (mode === 'player') {
-        opponentAddressInput.value = '';
-        opponentInput.classList.add('hidden');
-    }
-    
     showAlert('Demo game created!', 'success');
-}
-
-async function makeMove(position) {
-    if (!currentAccount || !currentGame) return;
-
-    try {
-        if (currentAccount.address.includes('demo')) {
-            makeDemoMove(position);
-            return;
-        }
-        
-        const payload = {
-            type: "entry_function_payload",
-            function: `${MODULE_ADDRESS}::tic_tac_toe::make_move`,
-            type_arguments: [],
-            arguments: [gameRegistry, currentGame.id.toString(), position.toString()]
-        };
-
-        const response = await window.aptos.signAndSubmitTransaction(payload);
-        showAlert('Move made!', 'success');
-        
-        setTimeout(() => {
-            loadCurrentGame();
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Make move error:', error);
-        showAlert('Failed to make move. Please try again.', 'error');
-    }
 }
 
 function makeDemoMove(position) {
@@ -554,7 +467,11 @@ function handleCellClick(position) {
         return;
     }
     
-    makeMove(position);
+    if (currentAccount.address.includes('demo')) {
+        makeDemoMove(position);
+    } else {
+        makeMove(position);
+    }
 }
 
 function resetGame() {
@@ -569,114 +486,18 @@ function resetGame() {
     });
 }
 
-// Data loading functions
+// Placeholder functions for blockchain interaction
 async function loadGameStats() {
-    if (!currentAccount) return;
-
-    try {
-        if (currentAccount.address.includes('demo')) {
-            return; // Demo data already loaded
-        }
-        
-        const response = await window.aptos.view({
-            function: `${MODULE_ADDRESS}::tic_tac_toe::get_game_stats`,
-            type_arguments: [],
-            arguments: [gameRegistry],
-        });
-        
-        const [total, active, completed] = response;
-        totalGamesElement.textContent = total.toString();
-        activeGamesElement.textContent = active.toString();
-        completedGamesElement.textContent = completed.toString();
-        
-    } catch (error) {
-        console.error('Load stats error:', error);
-    }
-}
-
-async function loadActiveGame() {
-    if (!currentAccount) return;
-
-    try {
-        if (currentAccount.address.includes('demo')) {
-            return; // Demo mode doesn't need to load active games
-        }
-        
-        const response = await window.aptos.view({
-            function: `${MODULE_ADDRESS}::tic_tac_toe::get_active_games`,
-            type_arguments: [],
-            arguments: [gameRegistry],
-        });
-        
-        const activeGames = response[0] || [];
-        
-        // Find a game where current user is a player
-        const userGame = activeGames.find(game => 
-            game.player_x === currentAccount.address || game.player_o === currentAccount.address
-        );
-        
-        if (userGame) {
-            currentGame = {
-                id: parseInt(userGame.id),
-                player_x: userGame.player_x,
-                player_o: userGame.player_o,
-                board: userGame.board.map(cell => parseInt(cell)),
-                current_player: parseInt(userGame.current_player),
-                game_status: parseInt(userGame.game_status),
-                moves_count: parseInt(userGame.moves_count),
-                created_at: parseInt(userGame.created_at),
-                finished_at: parseInt(userGame.finished_at),
-                winner: userGame.winner
-            };
-            
-            showCurrentGame();
-            updateGameDisplay();
-        }
-        
-    } catch (error) {
-        console.error('Load active game error:', error);
-    }
+    // Placeholder for blockchain stats loading
+    totalGamesElement.textContent = '0';
+    activeGamesElement.textContent = '0';
+    completedGamesElement.textContent = '0';
+    yourGamesElement.textContent = '0';
 }
 
 async function loadGameHistory() {
-    if (!currentAccount) return;
-
-    try {
-        showLoadingHistory(true);
-        
-        if (currentAccount.address.includes('demo')) {
-            displayGameHistory();
-            return;
-        }
-        
-        const response = await window.aptos.view({
-            function: `${MODULE_ADDRESS}::tic_tac_toe::get_player_games`,
-            type_arguments: [],
-            arguments: [gameRegistry, currentAccount.address],
-        });
-        
-        const playerGames = response[0] || [];
-        games = playerGames.map(game => ({
-            id: parseInt(game.id),
-            player_x: game.player_x,
-            player_o: game.player_o,
-            game_status: parseInt(game.game_status),
-            moves_count: parseInt(game.moves_count),
-            created_at: parseInt(game.created_at),
-            finished_at: parseInt(game.finished_at),
-            winner: game.winner
-        }));
-        
-        yourGamesElement.textContent = games.length.toString();
-        displayGameHistory();
-        
-    } catch (error) {
-        console.error('Load history error:', error);
-        games = [];
-        displayGameHistory();
-    } finally {
-        showLoadingHistory(false);
-    }
+    // Placeholder for blockchain history loading
+    displayGameHistory();
 }
 
 function displayGameHistory() {
@@ -685,68 +506,12 @@ function displayGameHistory() {
         emptyHistory.classList.remove('hidden');
         return;
     }
-
+    
     emptyHistory.classList.add('hidden');
-    
-    // Sort games by creation date (newest first)
-    const sortedGames = [...games].sort((a, b) => b.created_at - a.created_at);
-    
-    gamesList.innerHTML = sortedGames.map(game => {
-        const isWinner = game.winner === currentAccount.address;
-        const isDraw = game.game_status === GAME_STATUS_DRAW;
-        const isOngoing = game.game_status === GAME_STATUS_ONGOING;
-        
-        let gameClass = '';
-        let statusClass = '';
-        let statusText = '';
-        
-        if (isOngoing) {
-            gameClass = '';
-            statusClass = 'status-ongoing';
-            statusText = 'Ongoing';
-        } else if (isDraw) {
-            gameClass = 'draw';
-            statusClass = 'status-draw';
-            statusText = 'Draw';
-        } else if (isWinner) {
-            gameClass = 'won';
-            statusClass = 'status-won';
-            statusText = 'Won';
-        } else {
-            gameClass = 'lost';
-            statusClass = 'status-lost';
-            statusText = 'Lost';
-        }
-        
-        const opponent = game.player_o === '@0x1' ? 'Computer' : 
-                        (game.player_o === currentAccount.address ? 'You (O)' : 
-                         `${game.player_o.substring(0, 12)}...`);
-        
-        return `
-            <div class="game-item ${gameClass}">
-                <div class="game-header-item">
-                    <div class="game-title-item">Game #${game.id} vs ${opponent}</div>
-                    <div class="game-status-badge ${statusClass}">${statusText}</div>
-                </div>
-                <div class="game-details">
-                    <div>Moves: ${game.moves_count}/9</div>
-                    <div>Created: ${formatDate(game.created_at)}</div>
-                    ${game.finished_at > 0 ? `<div>Finished: ${formatDate(game.finished_at)}</div>` : ''}
-                </div>
-            </div>
-        `;
-    }).join('');
+    // Display game history logic here
 }
 
 // Utility functions
-function showLoadingHistory(show) {
-    if (show) {
-        loadingHistory.classList.remove('hidden');
-    } else {
-        loadingHistory.classList.add('hidden');
-    }
-}
-
 function showAlert(message, type) {
     const alert = document.createElement('div');
     alert.className = `alert alert-${type}`;
