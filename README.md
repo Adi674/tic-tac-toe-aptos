@@ -1,3 +1,8 @@
+<img width="1359" height="694" alt="image" src="https://github.com/user-attachments/assets/b052ee94-4735-4c53-b82b-be9ca7622dc7" />
+
+
+
+
 Tic Tac Toe on Aptos Blockchain
 Hey there! 👋 This is my take on the classic Tic Tac Toe game, but with a modern twist - it runs on the Aptos blockchain! I built this as a fun way to explore Web3 gaming and learn about Move smart contracts.
 🎮 Play the Game
@@ -91,8 +96,10 @@ Petra wallet integration handles all the crypto complexity
 Local storage keeps your scores even without blockchain
 
 Final Thoughts
+
 This started as a weekend project to learn about Aptos, but I ended up really enjoying the process of building a dApp that's actually fun to use. The goal was to make blockchain gaming feel natural rather than forced.
 Try it out and let me know what you think! Whether you use the blockchain features or just play locally, I hope you have fun with it.
 
 Play Now: adi674.github.io/tic-tac-toe-aptos
 Built with curiosity and caffeine ☕ | GitHub | Made with Aptos 🚀
+
